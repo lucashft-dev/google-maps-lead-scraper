@@ -18,6 +18,8 @@ def search_target(page):
     page.locator("div[role ='article']").first.wait_for(state="visible")
 
 # On recupère les noms seulement si ce n'est pas sponsorisé
+# Sert aussi maintenant a filtrer avant de cliquer sur fiche élément
+# On garde que les résultats non sponsorisés
 def extract_name(item):
     lines = item.inner_text().split("\n")
     lines = [l.strip() for l in lines if l.strip()]
@@ -39,21 +41,20 @@ with sync_playwright() as playwright:
 
         for i in range(results.count()):
                 item = results.nth(i)
-                list_name = extract_name(item)
-                if not list_name:
+                valid_item = extract_name(item)
+                if not valid_item:
                     continue
                 item.click()
                 page.wait_for_timeout(2000)
 
                 container = page.locator("div[role='main']").last # .last car on cible la fenetre container qui doit charger, logiquement ce sera la dernière
                 name = container.get_attribute("aria-label")
-        
-                print(name)
+                phone_raw = container.locator("button[data-item-id*='phone']").get_attribute("data-item-id")
+                if phone_raw:
+                        phone = phone_raw.split(":")[-1]
+                else:
+                        phone = "N/A"
 
-        """
-        for i in range(results.count()):
-            item = results.nth(i)
-            name = extract_name(item)
-            if name:
                 print(name)
-        """
+                print(phone)
+                print("------")
