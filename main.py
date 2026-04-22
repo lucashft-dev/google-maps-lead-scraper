@@ -48,13 +48,22 @@ with sync_playwright() as playwright:
                 page.wait_for_timeout(2000)
 
                 container = page.locator("div[role='main']").last # .last car on cible la fenetre container qui doit charger, logiquement ce sera la dernière
+
                 name = container.get_attribute("aria-label")
+
                 phone_raw = container.locator("button[data-item-id*='phone']").get_attribute("data-item-id")
                 if phone_raw:
                         phone = phone_raw.split(":")[-1]
                 else:
                         phone = "N/A"
 
-                print(name)
-                print(phone)
+                website_locator = container.locator("a[data-item-id='authority']")
+                if website_locator.count() > 0:  # Utilise count() car locator toujours présent
+                        website = website_locator.get_attribute("href")
+                else:
+                        website = "N/A"
+
+                print(f" Nom : {name}")
+                print(f" Téléphone : {phone}")
+                print(f" Site web : {website}")
                 print("------")
