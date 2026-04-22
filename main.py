@@ -34,9 +34,24 @@ with sync_playwright() as playwright:
         page.goto("https://www.google.com/maps")
         accept_cookie(page)
         search_target(page)
+
         results = page.locator("div[role='article']")
+
+        for i in range(results.count()):
+                item = results.nth(i)
+
+                item.click()
+                page.wait_for_timeout(2000)
+
+                container = page.locator("div[role='main']").last # .last car on cible la fenetre container qui doit charger, logiquement ce sera la dernière
+                name = container.get_attribute("aria-label")
+        
+                print(name)
+
+        """
         for i in range(results.count()):
             item = results.nth(i)
             name = extract_name(item)
             if name:
                 print(name)
+        """
