@@ -39,7 +39,9 @@ with sync_playwright() as playwright:
 
         for i in range(results.count()):
                 item = results.nth(i)
-
+                list_name = extract_name(item)
+                if not list_name:
+                    continue
                 item.click()
                 page.wait_for_timeout(2000)
 
