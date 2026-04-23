@@ -75,12 +75,12 @@ def infinite_scroll(page, max_results):
 with sync_playwright() as playwright:
         browser = playwright.chromium.launch(headless=True)
         page = browser.new_page()
-        page.goto("https://www.google.com/maps")
-        accept_cookie(page)
 
         for target in targets:
                 print(50 * "_")
                 print(f"Scraping en cours pour {target}.")
+                page.goto("https://www.google.com/maps")
+                accept_cookie(page)
                 search_target(page, target)
                 infinite_scroll(page, max_results)
 
