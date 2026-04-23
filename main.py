@@ -2,6 +2,9 @@ from playwright.sync_api import sync_playwright
 
 
 
+leads = []
+
+
 def accept_cookie(page):
         cookie_button = page.get_by_role("button", name="Tout accepter")
         if cookie_button.is_visible(timeout=3000):
@@ -63,7 +66,12 @@ with sync_playwright() as playwright:
                 else:
                         website = "N/A"
 
-                print(f" Nom : {name}")
-                print(f" Téléphone : {phone}")
-                print(f" Site web : {website}")
-                print("------")
+                lead = {
+                      "name": name,
+                      "phone": phone,
+                      "website": website
+                }
+
+                leads.append(lead)
+        
+        print(leads)
