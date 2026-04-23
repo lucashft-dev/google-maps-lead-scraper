@@ -1,5 +1,5 @@
 from playwright.sync_api import sync_playwright
-
+import csv
 
 
 leads = []
@@ -75,3 +75,11 @@ with sync_playwright() as playwright:
                 leads.append(lead)
         
         print(leads)
+
+with open("leads.csv", mode="w", newline="", encoding="utf-8") as file:
+      writer = csv.DictWriter(
+            file,
+            fieldnames=["name", "phone", "website"]
+      )
+      writer.writeheader()
+      writer.writerows(leads)
