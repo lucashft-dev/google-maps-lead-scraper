@@ -2,8 +2,10 @@ from playwright.sync_api import sync_playwright
 import csv
 
 
-
-target = "Restaurant Lyon"
+targets = [
+       "Restaurant Lyon",
+       "Bar Lyon"
+       ]
 max_results = 20
 leads = []
 
@@ -17,7 +19,7 @@ def accept_cookie(page):
 
 # J'ai nommé 'target' car on peut chercher n'importe quel type de leads
 # Target défini en haut du script
-def search_target(page):
+def search_target(page, target):
     search_box = page.get_by_role("combobox")
     search_box.click()
     search_box.fill(target)
@@ -54,14 +56,16 @@ def infinite_scroll(page, max_results):
                 results = page.locator("div[role='article']")
                 current_count = results.count()
 
-                print(f"Résultats actuel : {current_count}, en attente du prochain scroll ...")
+                print(f"Résultats actuel : {current_count}")
 
                 if current_count >= max_results:
+                        print(50 * "-")
                         print(f"Objectif atteint : {max_results} résultats")
                         break
 
                 if current_count == previous_count:
-                        print("Fin du scroll (plus de nouveaux résultats)")
+                        print(50 * "-")
+                        print(f"Plus de nouveaux résultats. {current_count} résultats trouvé.")
                         break
 
                 previous_count = current_count
@@ -73,51 +77,58 @@ with sync_playwright() as playwright:
         page = browser.new_page()
         page.goto("https://www.google.com/maps")
         accept_cookie(page)
-        search_target(page)
-        infinite_scroll(page, max_results)
 
-        results = page.locator("div[role='article']")
+        for target in targets:
+                print(50 * "_")
+                print(f"Scraping en cours pour {target}.")
+                search_target(page, target)
+                infinite_scroll(page, max_results)
 
-        for i in range(results.count()):
-                item = results.nth(i)
-                valid_item = extract_name(item)
-                if not valid_item:
-                    continue
-                item.click()
-                page.wait_for_timeout(2000)
+                results = page.locator("div[role='article']")
 
-                container = page.locator("div[role='main']").last # .last car on cible la fenetre container qui doit charger, logiquement ce sera la dernière
+                for i in range(results.count()):
+                        item = results.nth(i)
+                        valid_item = extract_name(item)
+                        if not valid_item:
+                                continue
+                        item.click()
+                        page.wait_for_timeout(2000)
 
-                name = container.get_attribute("aria-label")
+                        container = page.locator("div[role='main']").last # .last car on cible la fenetre container qui doit charger, logiquement ce sera la dernière
 
-                phone_raw = container.locator("button[data-item-id*='phone']").get_attribute("data-item-id")
-                if phone_raw:
-                        phone = phone_raw.split(":")[-1]
-                else:
-                        phone = "N/A"
+                        name = container.get_attribute("aria-label")
 
-                website_locator = container.locator("a[data-item-id='authority']")
-                if website_locator.count() > 0:  # Utilise count() car locator toujours présent (true)
-                        website = website_locator.get_attribute("href")
-                else:
-                        website = "N/A"
+                        phone_locator = container.locator("button[data-item-id*='phone']")
+                        if phone_locator.count() > 0:
+                                phone_raw = phone_locator.first.get_attribute("data-item-id")
+                                phone = phone_raw.split(":")[-1] if phone_raw else "N/A"
+                        else:
+                                phone = "N/A"
 
-                lead = {
-                      "name": name,
-                      "phone": phone,
-                      "website": website
-                }
+                        website_locator = container.locator("a[data-item-id='authority']")
+                        if website_locator.count() > 0:  # Utilise count() car locator toujours présent (true)
+                                website = website_locator.get_attribute("href")
+                        else:
+                                website = "N/A"
 
-                leads.append(lead)
+                        lead = {
+                        "target": target,
+                        "name": name,
+                        "phone": phone,
+                        "website": website
+                        }
+
+                        leads.append(lead)
 
 
 with open("leads.csv", mode="w", newline="", encoding="utf-8") as file:
       writer = csv.DictWriter(
             file,
-            fieldnames=["name", "phone", "website"]
+            fieldnames=["target", "name", "phone", "website"]
       )
       writer.writeheader()
       writer.writerows(leads)
 
 
+print(70 * "_")
 print(f"Extraction terminée, {len(leads)} leads enregistrés dans leads.csv")
