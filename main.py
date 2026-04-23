@@ -2,6 +2,7 @@ from playwright.sync_api import sync_playwright
 import csv
 
 
+target = "Restaurant Lyon"
 leads = []
 
 
@@ -13,10 +14,11 @@ def accept_cookie(page):
             print("Bouton cookie non trouver")
 
 # J'ai nommé 'target' car on peut chercher n'importe quel type de leads
+# Target défini en haut du script
 def search_target(page):
     search_box = page.get_by_role("combobox")
     search_box.click()
-    search_box.fill("Restaurant Lyon")
+    search_box.fill(target)
     page.locator("button[aria-label='Rechercher']").click()
     page.locator("div[role ='article']").first.wait_for(state="visible")
 
@@ -31,6 +33,19 @@ def extract_name(item):
     
     return lines[0]
 
+# Je l'ai défini de base a 5 mais a augmenter en fontion du besoin
+def infinite_scroll(page):
+        for _ in range(5):
+                page.evaluate("""
+                        () => {
+                                const feed = document.querySelector("div[role='feed']");
+                                if (feed) {
+                                feed.scrollTop = feed.scrollHeight;
+                                }
+                        }
+                        """)
+                page.wait_for_timeout(2000)
+
 
 
 with sync_playwright() as playwright:
@@ -39,6 +54,7 @@ with sync_playwright() as playwright:
         page.goto("https://www.google.com/maps")
         accept_cookie(page)
         search_target(page)
+        infinite_scroll(page)
 
         results = page.locator("div[role='article']")
 
@@ -74,7 +90,7 @@ with sync_playwright() as playwright:
 
                 leads.append(lead)
         
-        print(leads)
+        # print(leads) ---> Inutile dans la version actuel car résulat récupérer en CSV, garder pour debug 
 
 with open("leads.csv", mode="w", newline="", encoding="utf-8") as file:
       writer = csv.DictWriter(
