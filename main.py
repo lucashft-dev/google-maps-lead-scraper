@@ -2,7 +2,9 @@ from playwright.sync_api import sync_playwright
 import csv
 
 
+
 target = "Restaurant Lyon"
+max_results = 20
 leads = []
 
 
@@ -33,9 +35,12 @@ def extract_name(item):
     
     return lines[0]
 
-# Je l'ai défini de base a 5 mais a augmenter en fontion du besoin
-def infinite_scroll(page):
-        for _ in range(5):
+# Scroll jusqu'à atteindre le nombre de résultat voulu ou jusqu'à ce qu'il n'y ait plus de nouveaux résultats
+def infinite_scroll(page, max_results):
+        feed = page.locator("div[role='feed']")
+    
+        previous_count = 0
+        while True:
                 page.evaluate("""
                         () => {
                                 const feed = document.querySelector("div[role='feed']");
@@ -46,6 +51,21 @@ def infinite_scroll(page):
                         """)
                 page.wait_for_timeout(2000)
 
+                results = page.locator("div[role='article']")
+                current_count = results.count()
+
+                print(f"Résultats actuel : {current_count}, en attente du prochain scroll ...")
+
+                if current_count >= max_results:
+                        print(f"Objectif atteint : {max_results} résultats")
+                        break
+
+                if current_count == previous_count:
+                        print("Fin du scroll (plus de nouveaux résultats)")
+                        break
+
+                previous_count = current_count
+
 
 
 with sync_playwright() as playwright:
@@ -54,7 +74,7 @@ with sync_playwright() as playwright:
         page.goto("https://www.google.com/maps")
         accept_cookie(page)
         search_target(page)
-        infinite_scroll(page)
+        infinite_scroll(page, max_results)
 
         results = page.locator("div[role='article']")
 
@@ -77,7 +97,7 @@ with sync_playwright() as playwright:
                         phone = "N/A"
 
                 website_locator = container.locator("a[data-item-id='authority']")
-                if website_locator.count() > 0:  # Utilise count() car locator toujours présent
+                if website_locator.count() > 0:  # Utilise count() car locator toujours présent (true)
                         website = website_locator.get_attribute("href")
                 else:
                         website = "N/A"
@@ -89,8 +109,7 @@ with sync_playwright() as playwright:
                 }
 
                 leads.append(lead)
-        
-        # print(leads) ---> Inutile dans la version actuel car résulat récupérer en CSV, garder pour debug 
+
 
 with open("leads.csv", mode="w", newline="", encoding="utf-8") as file:
       writer = csv.DictWriter(
@@ -99,3 +118,6 @@ with open("leads.csv", mode="w", newline="", encoding="utf-8") as file:
       )
       writer.writeheader()
       writer.writerows(leads)
+
+
+print(f"Extraction terminée, {len(leads)} leads enregistrés dans leads.csv")
