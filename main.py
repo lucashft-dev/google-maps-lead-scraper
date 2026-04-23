@@ -8,6 +8,7 @@ targets = [
        ]
 max_results = 20
 leads = []
+seen = set()
 
 
 def accept_cookie(page):
@@ -110,6 +111,12 @@ with sync_playwright() as playwright:
                                 website = website_locator.get_attribute("href")
                         else:
                                 website = "N/A"
+
+                        # Ici je viens éviter les doublons en sortant de la boucle si deja présent dans seen
+                        key = f"{name}-{phone}"
+                        if key in seen:
+                               continue
+                        seen.add(key)
 
                         lead = {
                         "target": target,
