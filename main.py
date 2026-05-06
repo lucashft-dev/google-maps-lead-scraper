@@ -4,10 +4,10 @@ import csv
 
 targets = [
         "Restaurant Lyon",
-        "Bar Lyon"
+        "Bar Lyon",
        ]
 
-max_results = 5
+max_results = 10
 leads = []
 seen = set()
 
@@ -75,7 +75,7 @@ def infinite_scroll(page, max_results):
 
 
 with sync_playwright() as playwright:
-        browser = playwright.chromium.launch(headless=True)
+        browser = playwright.chromium.launch(headless=False)
         page = browser.new_page()
 
         for target in targets:
@@ -127,9 +127,16 @@ with sync_playwright() as playwright:
                         # Ce sera un des problèmes a corriger à l'avenir, pour le moment ça fonctionne en headless = True
                         reviews_locator = container.locator("span[role='img'][aria-label*='avis']")
                         if reviews_locator.count() > 0:
-                                reviews = reviews_locator.first.inner_text()
+                                reviews = reviews_locator.first.get_attribute("aria-label")
                         else:
                                 reviews = "N/A"
+                        
+                        address_locator = container.locator('button[data-item-id="address"]')
+                        if address_locator.count() > 0:
+                                address = address_locator.first.inner_text()
+                                address = address.replace("\n", " ").replace("", "").strip() # Obliger pour un rendu propre
+                        else:
+                                address = "N/A"
 
 
                         # Ici je viens éviter les doublons en sortant de la boucle si deja présent dans seen
@@ -144,7 +151,8 @@ with sync_playwright() as playwright:
                         "phone": phone,
                         "website": website,
                         "rating": rating,
-                        "reviews": reviews
+                        "reviews": reviews,
+                        "address": address
                         }
 
                         leads.append(lead)
@@ -153,7 +161,7 @@ with sync_playwright() as playwright:
 with open("leads.csv", mode="w", newline="", encoding="utf-8") as file:
       writer = csv.DictWriter(
             file,
-            fieldnames=["target", "name", "phone", "website", "rating", "reviews"]
+            fieldnames=["target", "name", "phone", "website", "rating", "reviews", "address"]
       )
       writer.writeheader()
       writer.writerows(leads)
