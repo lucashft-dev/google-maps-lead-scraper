@@ -3,10 +3,11 @@ import csv
 
 
 targets = [
-       "Restaurant Lyon",
-       "Bar Lyon"
+        "Restaurant Lyon",
+        "Bar Lyon"
        ]
-max_results = 20
+
+max_results = 5
 leads = []
 seen = set()
 
@@ -97,7 +98,9 @@ with sync_playwright() as playwright:
 
                         container = page.locator("div[role='main']").last # .last car on cible la fenetre container qui doit charger, logiquement ce sera la dernière
 
+
                         name = container.get_attribute("aria-label")
+
 
                         phone_locator = container.locator("button[data-item-id*='phone']")
                         if phone_locator.count() > 0:
@@ -106,11 +109,28 @@ with sync_playwright() as playwright:
                         else:
                                 phone = "N/A"
 
+
                         website_locator = container.locator("a[data-item-id='authority']")
                         if website_locator.count() > 0:  # Utilise count() car locator toujours présent (true)
                                 website = website_locator.get_attribute("href")
                         else:
                                 website = "N/A"
+
+
+                        rating_locator = container.locator("span[aria-label*='étoiles']")
+                        if rating_locator.count() > 0:
+                                rating = rating_locator.first.get_attribute("aria-label")
+                        else:
+                                rating = "N/A"
+
+                        # Pour le moment, récupérer le nombre d'avis fonctionne uniquement avec le headless de playwright en False
+                        # Ce sera un des problèmes a corriger à l'avenir, pour le moment ça fonctionne en headless = True
+                        reviews_locator = container.locator("span[role='img'][aria-label*='avis']")
+                        if reviews_locator.count() > 0:
+                                reviews = reviews_locator.first.inner_text()
+                        else:
+                                reviews = "N/A"
+
 
                         # Ici je viens éviter les doublons en sortant de la boucle si deja présent dans seen
                         key = f"{name}-{phone}"
@@ -122,7 +142,9 @@ with sync_playwright() as playwright:
                         "target": target,
                         "name": name,
                         "phone": phone,
-                        "website": website
+                        "website": website,
+                        "rating": rating,
+                        "reviews": reviews
                         }
 
                         leads.append(lead)
@@ -131,7 +153,7 @@ with sync_playwright() as playwright:
 with open("leads.csv", mode="w", newline="", encoding="utf-8") as file:
       writer = csv.DictWriter(
             file,
-            fieldnames=["target", "name", "phone", "website"]
+            fieldnames=["target", "name", "phone", "website", "rating", "reviews"]
       )
       writer.writeheader()
       writer.writerows(leads)
