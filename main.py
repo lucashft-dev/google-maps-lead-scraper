@@ -63,15 +63,13 @@ def infinite_scroll(page, max_results):
                 results = page.locator("div[role='article']")
                 current_count = results.count()
 
-                print(f"Résultats actuel : {current_count}")
+                print(f"Résultats : {current_count}")
 
                 if current_count >= max_results:
-                        print(50 * "-")
-                        print(f"Objectif atteint : {max_results} résultats")
+                        print(f"Objectif atteint : {max_results}")
                         break
 
                 if current_count == previous_count:
-                        print(50 * "-")
                         print(f"Plus de nouveaux résultats. {current_count} résultats trouvé.")
                         break
 
@@ -101,7 +99,9 @@ with sync_playwright() as playwright:
 
         for target in targets:
                 leads = []
-                print(f"Scraping en cours pour {target}.")
+                print("\n" + "=" * 50)
+                print(f"🔎 Scraping: {target}")
+                print("-" * 50)
                 page.goto("https://www.google.com/maps")
                 accept_cookie(page)
                 search_target(page, target)
@@ -183,14 +183,21 @@ with sync_playwright() as playwright:
                         leads.append(lead)
 
                         # Maintenant on va créer un fichier .csv pour chaque target, donc export dans la boucle
-                        filename = target.lower().replace(" ", "_") + ".csv"
-                        with open(filename, mode="w", newline="", encoding="utf-8") as file:
-                               writer = csv.DictWriter(
-                                       file,
-                                       fieldnames=["target", "name", "phone", "website", "rating", "reviews", "address"]
-                                       )
-                               writer.writeheader()
-                               writer.writerows(leads)
+                filename = target.lower().replace(" ", "_") + ".csv"
+                with open(filename, mode="w", newline="", encoding="utf-8") as file:
+                        writer = csv.DictWriter(
+                               file,
+                               fieldnames=["target", "name", "phone", "website", "rating", "reviews", "address"]
+                               )
+                        writer.writeheader()
+                        writer.writerows(leads)
+                        
+                print("\n📊 Stats:")
+                print(f"- Leads: {len(leads)}")
+                print(f"- Doublons: {duplicate_count}")
+                print(f"- Sans téléphone: {missing_phone_count}")
+                print(f"- Sans site web: {missing_website_count}")
+                print(f"\n💾 File: {filename}")
 
 
 # with open("leads.csv", mode="w", newline="", encoding="utf-8") as file:
@@ -202,9 +209,9 @@ with sync_playwright() as playwright:
 #       writer.writerows(leads)
 
 
-print(70 * "_")
-print(f"Extraction terminée, {len(leads)} leads enregistrés dans leads.csv")
-print(f"[INFO] {len(leads)} leads enregistrés")
-print(f"[INFO] {duplicate_count} doublons ignorés")
-print(f"[INFO] {missing_phone_count} sans téléphone")
-print(f"[INFO] {missing_website_count} sans site web")
+# print(70 * "_")
+# print(f"Extraction terminée, {len(leads)} leads enregistrés dans leads.csv")
+# print(f"[INFO] {len(leads)} leads enregistrés")
+# print(f"[INFO] {duplicate_count} doublons ignorés")
+# print(f"[INFO] {missing_phone_count} sans téléphone")
+# print(f"[INFO] {missing_website_count} sans site web")
