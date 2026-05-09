@@ -9,12 +9,7 @@ targets = [
        ]
 
 max_results = 10
-# leads = []
 seen = set()
-
-duplicate_count = 0
-missing_phone_count = 0
-missing_website_count = 0
 
 
 def accept_cookie(page):
@@ -99,6 +94,9 @@ with sync_playwright() as playwright:
 
         for target in targets:
                 leads = []
+                duplicate_count = 0
+                missing_phone_count = 0
+                missing_website_count = 0
                 print("\n" + "=" * 50)
                 print(f"🔎 Scraping: {target}")
                 print("-" * 50)
@@ -199,19 +197,4 @@ with sync_playwright() as playwright:
                 print(f"- Sans site web: {missing_website_count}")
                 print(f"\n💾 File: {filename}")
 
-
-# with open("leads.csv", mode="w", newline="", encoding="utf-8") as file:
-#       writer = csv.DictWriter(
-#             file,
-#             fieldnames=["target", "name", "phone", "website", "rating", "reviews", "address"]
-#       )
-#       writer.writeheader()
-#       writer.writerows(leads)
-
-
-# print(70 * "_")
-# print(f"Extraction terminée, {len(leads)} leads enregistrés dans leads.csv")
-# print(f"[INFO] {len(leads)} leads enregistrés")
-# print(f"[INFO] {duplicate_count} doublons ignorés")
-# print(f"[INFO] {missing_phone_count} sans téléphone")
-# print(f"[INFO] {missing_website_count} sans site web")
+        browser.close()
