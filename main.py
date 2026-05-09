@@ -9,7 +9,7 @@ targets = [
        ]
 
 max_results = 10
-leads = []
+# leads = []
 seen = set()
 
 duplicate_count = 0
@@ -100,6 +100,7 @@ with sync_playwright() as playwright:
         page = browser.new_page()
 
         for target in targets:
+                leads = []
                 print(f"Scraping en cours pour {target}.")
                 page.goto("https://www.google.com/maps")
                 accept_cookie(page)
@@ -181,14 +182,24 @@ with sync_playwright() as playwright:
 
                         leads.append(lead)
 
+                        # Maintenant on va créer un fichier .csv pour chaque target, donc export dans la boucle
+                        filename = target.lower().replace(" ", "_") + ".csv"
+                        with open(filename, mode="w", newline="", encoding="utf-8") as file:
+                               writer = csv.DictWriter(
+                                       file,
+                                       fieldnames=["target", "name", "phone", "website", "rating", "reviews", "address"]
+                                       )
+                               writer.writeheader()
+                               writer.writerows(leads)
 
-with open("leads.csv", mode="w", newline="", encoding="utf-8") as file:
-      writer = csv.DictWriter(
-            file,
-            fieldnames=["target", "name", "phone", "website", "rating", "reviews", "address"]
-      )
-      writer.writeheader()
-      writer.writerows(leads)
+
+# with open("leads.csv", mode="w", newline="", encoding="utf-8") as file:
+#       writer = csv.DictWriter(
+#             file,
+#             fieldnames=["target", "name", "phone", "website", "rating", "reviews", "address"]
+#       )
+#       writer.writeheader()
+#       writer.writerows(leads)
 
 
 print(70 * "_")
