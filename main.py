@@ -12,6 +12,10 @@ max_results = 10
 leads = []
 seen = set()
 
+duplicate_count = 0
+missing_phone_count = 0
+missing_website_count = 0
+
 
 def accept_cookie(page):
         cookie_button = page.get_by_role("button", name="Tout accepter")
@@ -96,7 +100,6 @@ with sync_playwright() as playwright:
         page = browser.new_page()
 
         for target in targets:
-                print(50 * "_")
                 print(f"Scraping en cours pour {target}.")
                 page.goto("https://www.google.com/maps")
                 accept_cookie(page)
@@ -125,6 +128,7 @@ with sync_playwright() as playwright:
                                 phone = phone_raw.split(":")[-1] if phone_raw else "N/A"
                         else:
                                 phone = "N/A"
+                                missing_phone_count += 1
 
 
                         website_locator = container.locator("a[data-item-id='authority']")
@@ -132,6 +136,7 @@ with sync_playwright() as playwright:
                                 website = website_locator.get_attribute("href")
                         else:
                                 website = "N/A"
+                                missing_website_count += 1
 
 
                         rating_locator = container.locator("span[aria-label*='étoiles']")
@@ -157,8 +162,10 @@ with sync_playwright() as playwright:
 
 
                         # Ici je viens éviter les doublons en sortant de la boucle si deja présent dans seen
+                        # Et j'ajoute un compteur pour les doublons
                         key = f"{name}-{phone}"
                         if key in seen:
+                               duplicate_count += 1
                                continue
                         seen.add(key)
 
@@ -186,3 +193,7 @@ with open("leads.csv", mode="w", newline="", encoding="utf-8") as file:
 
 print(70 * "_")
 print(f"Extraction terminée, {len(leads)} leads enregistrés dans leads.csv")
+print(f"[INFO] {len(leads)} leads enregistrés")
+print(f"[INFO] {duplicate_count} doublons ignorés")
+print(f"[INFO] {missing_phone_count} sans téléphone")
+print(f"[INFO] {missing_website_count} sans site web")
