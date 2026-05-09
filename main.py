@@ -1,5 +1,6 @@
 from playwright.sync_api import sync_playwright
 import csv
+import re 
 
 
 targets = [
@@ -71,6 +72,22 @@ def infinite_scroll(page, max_results):
                         break
 
                 previous_count = current_count
+
+# Nettoyage des données pour les rendre exploitables
+def clean_rating(rating):
+    if rating == "N/A":
+        return None
+    return float(rating.split()[0].replace(",", "."))
+
+def clean_reviews(reviews):
+    if reviews == "N/A":
+        return None
+    return int(re.sub(r"[^\d]", "", reviews))
+
+def clean_address(address):
+    if address == "N/A":
+        return None
+    return " ".join(address.split()).replace("", "").strip()
 
 
 
@@ -150,9 +167,9 @@ with sync_playwright() as playwright:
                         "name": name,
                         "phone": phone,
                         "website": website,
-                        "rating": rating,
-                        "reviews": reviews,
-                        "address": address
+                        "rating": clean_rating(rating),
+                        "reviews": clean_reviews(reviews),
+                        "address": clean_address(address)
                         }
 
                         leads.append(lead)
